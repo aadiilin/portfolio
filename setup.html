@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Setup Guide — Zakk Events</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet" />
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;background:#080808;color:#f5f0e8;line-height:1.8;padding:2rem}
+.container{max-width:800px;margin:0 auto}
+h1{font-family:'Playfair Display',serif;font-size:2.5rem;color:#f5f0e8;margin-bottom:.3rem}
+h1 span{color:#c9a227}
+.subtitle{color:#9a9a9a;font-size:.9rem;margin-bottom:2rem}
+.step{background:#111;border:1px solid rgba(255,255,255,.04);border-radius:16px;padding:2rem;margin-bottom:1.5rem}
+.step-num{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;background:#c9a227;color:#080808;font-weight:700;font-size:.9rem;margin-bottom:.8rem}
+.step h2{font-family:'Playfair Display',serif;font-size:1.3rem;color:#f5f0e8;margin-bottom:.5rem}
+.step h2 small{font-size:.75rem;color:#9a9a9a;font-weight:400}
+.step p{color:#9a9a9a;font-size:.9rem;margin-bottom:.8rem}
+.step ol,.step ul{color:#9a9a9a;font-size:.85rem;padding-left:1.5rem;margin-bottom:.8rem;line-height:2}
+.step li{margin-bottom:.3rem}
+.step code{background:#1a1a1a;color:#c9a227;padding:.15rem .5rem;border-radius:4px;font-size:.8rem}
+.step .box{background:#0f0f0f;border:1px solid rgba(255,255,255,.06);border-radius:8px;padding:1rem;margin:.8rem 0;font-size:.82rem;color:#aaa}
+.step .box strong{color:#f5f0e8}
+.note{background:rgba(201,162,39,.08);border-left:3px solid #c9a227;padding:.8rem 1rem;border-radius:0 8px 8px 0;font-size:.82rem;color:#c9a227;margin-top:1rem}
+.footer{text-align:center;margin-top:2rem;color:#666;font-size:.75rem}
+@media(max-width:600px){body{padding:1rem}.step{padding:1.2rem}h1{font-size:1.8rem}}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>zakk<span>.</span> Setup Guide</h1>
+  <p class="subtitle">Follow these 4 simple steps to get your website live and ready to manage.</p>
+
+  <div class="step">
+    <div class="step-num">1</div>
+    <h2>Create your free <strong style="color:#c9a227;">Cloudinary</strong> account <small>(for storing photos)</small></h2>
+    <ol>
+      <li>Go to <strong style="color:#f5f0e8;">cloudinary.com</strong> and click <strong style="color:#f5f0e8;">Sign Up Free</strong></li>
+      <li>Sign up with your email or Google account — no credit card needed</li>
+      <li>After logging in, you'll see your <strong style="color:#c9a227;">Cloud Name</strong> on the dashboard. Copy it.</li>
+      <li>Go to <strong style="color:#f5f0e8;">Settings</strong> (gear icon) → <strong style="color:#f5f0e8;">Upload</strong> tab</li>
+      <li>Scroll to <strong style="color:#f5f0e8;">Upload Presets</strong> and click <strong style="color:#f5f0e8;">Add Upload Preset</strong></li>
+      <li>Give it a name like <code>zakk_preset</code>, set <strong style="color:#f5f0e8;">Signing Mode</strong> to <strong style="color:#c9a227;">Unsigned</strong>, then <strong style="color:#f5f0e8;">Save</strong></li>
+      <li>Copy the Preset Name (e.g. <code>zakk_preset</code>)</li>
+    </ol>
+    <div class="box">
+      <strong>📝 Open the file named <code>config.js</code></strong><br />
+      Find the section that says <code>cloudinary:</code> and paste your Cloud Name and Upload Preset:<br /><br />
+      <code>cloudName: "YOUR_CLOUD_NAME"</code><br />
+      <code>uploadPreset: "YOUR_PRESET_NAME"</code>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">2</div>
+    <h2>Create your free <strong style="color:#4285F4;">Firebase</strong> account <small>(for storing data)</small></h2>
+    <ol>
+      <li>Go to <strong style="color:#f5f0e8;">firebase.google.com</strong> and click <strong style="color:#f5f0e8;">Get Started</strong></li>
+      <li>Click <strong style="color:#f5f0e8;">Create a Project</strong></li>
+      <li>Name it <code>zakk-events</code> and click <strong style="color:#f5f0e8;">Continue</strong></li>
+      <li>Disable Google Analytics (optional) and click <strong style="color:#f5f0e8;">Create Project</strong></li>
+      <li>Once created, click <strong style="color:#f5f0e8;">Build</strong> → <strong style="color:#f5f0e8;">Firestore Database</strong> → <strong style="color:#f5f0e8;">Create Database</strong></li>
+      <li>Choose <strong style="color:#c9a227;">Start in test mode</strong> → <strong style="color:#f5f0e8;">Next</strong> → <strong style="color:#f5f0e8;">Create</strong></li>
+      <li>Go to the gear icon ⚙️ → <strong style="color:#f5f0e8;">Project Settings</strong></li>
+      <li>Scroll to <strong style="color:#f5f0e8;">Your apps</strong> → Click the <strong style="color:#f5f0e8;">Web</strong> button <strong style="color:#f5f0e8;">(&lt;/&gt;)</strong></li>
+      <li>Register your app (nickname: <code>zakk-events</code>) → click <strong style="color:#f5f0e8;">Register</strong></li>
+      <li>You'll see a config object. <strong style="color:#c9a227;">Copy all 6 values</strong> shown</li>
+    </ol>
+    <div class="box">
+      <strong>📝 Open <code>config.js</code> again</strong><br />
+      Find the section that says <code>firebase:</code> and paste all 6 values:<br /><br />
+      <code>apiKey: "your-api-key"</code><br />
+      <code>authDomain: "your-project.firebaseapp.com"</code><br />
+      <code>projectId: "your-project-id"</code><br />
+      <code>storageBucket: "your-project.appspot.com"</code><br />
+      <code>messagingSenderId: "123456789"</code><br />
+      <code>appId: "1:123:web:abc123"</code>
+    </div>
+    <div class="note">
+      ✔️ Don't worry — all these values are safe to share. They just let your website read/write data.
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">3</div>
+    <h2>Deploy your website to the internet</h2>
+    <p>Now we'll upload everything to Vercel so it's live on the web.</p>
+    <ol>
+      <li>Open <strong style="color:#f5f0e8;">OpenCode</strong> or your terminal / command prompt</li>
+      <li>Type this command and press Enter:</li>
+    </ol>
+    <div class="box" style="text-align:center;font-size:1.1rem;">
+      <code style="font-size:1rem;">npx vercel --prod</code>
+    </div>
+    <p style="margin-top:.5rem;">Wait about 30 seconds. When done, you'll see a URL like <code>https://zakkevents.vercel.app</code></p>
+  </div>
+
+  <div class="step">
+    <div class="step-num">4</div>
+    <h2>🎉 Start using your admin panel!</h2>
+    <p>Your website is now live and fully self-manageable.</p>
+    <ul>
+      <li><strong style="color:#f5f0e8;">Main website:</strong> <code>https://zakkevents.vercel.app</code></li>
+      <li><strong style="color:#f5f0e8;">Admin panel:</strong> <code>https://zakkevents.vercel.app/admin.html</code></li>
+      <li><strong style="color:#f5f0e8;">Password:</strong> <code>zakk2025</code></li>
+    </ul>
+    <p style="margin-top:.8rem;">In the admin panel you can:</p>
+    <ul>
+      <li>📸 <strong style="color:#c9a227;">Upload photos</strong> — they appear on your website gallery instantly</li>
+      <li>🎨 <strong style="color:#c9a227;">Change hero photo</strong> — the big background image at the top</li>
+      <li>ℹ️ <strong style="color:#c9a227;">Edit business info</strong> — phone, address, taglines</li>
+      <li>💬 <strong style="color:#c9a227;">Manage reviews</strong> — add customer testimonials</li>
+      <li>🛎️ <strong style="color:#c9a227;">Manage services</strong> — turn services on/off</li>
+    </ul>
+    <div class="note">
+      🔒 <strong>Need to get back to the admin panel?</strong> Press <strong style="color:#f5f0e8;">Ctrl + Shift + A</strong> anywhere on your website, or click the tiny <strong style="color:#f5f0e8;">🔒 Admin</strong> link at the bottom-right of the footer.
+    </div>
+  </div>
+
+  <div class="footer">
+    Need help? Ask Adil — <a href="https://aadiilin.vercel.app" target="_blank" style="color:#c9a227;text-decoration:none;">aadiilin.vercel.app</a>
+  </div>
+</div>
+</body>
+</html>

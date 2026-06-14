@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Zakk Events — Admin Panel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="admin.css" />
+</head>
+<body>
+
+<!-- ===== LOGIN SCREEN ===== -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="login-logo">zakk<span>.</span></div>
+    <div class="login-sub">Admin Panel</div>
+    <input type="password" class="login-input" id="loginPassword" placeholder="Enter password" autocomplete="off" />
+    <button class="login-btn" id="loginBtn">Login</button>
+    <div class="login-error" id="loginError"></div>
+  </div>
+</div>
+
+<!-- ===== APP ===== -->
+<div id="app">
+  <!-- Top Nav -->
+  <div class="topnav">
+    <div style="display:flex;align-items:center;">
+      <a href="/" class="back-link">← Back to Website</a>
+      <div class="topnav-logo">zakk<span>.</span> <span style="font-weight:400;color:#888;font-size:.72rem;">Admin</span></div>
+    </div>
+    <div class="topnav-right">
+      <span id="inactiveWarning" style="font-size:.7rem;color:#888;display:none;"></span>
+      <button class="topnav-logout" id="logoutBtn">Logout</button>
+    </div>
+  </div>
+
+  <!-- Sidebar -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-item active" data-section="gallery">📸 Gallery &amp; Categories</div>
+    <div class="sidebar-item" data-section="hero">🎨 Hero Section</div>
+    <div class="sidebar-item" data-section="info">ℹ️ Business Info</div>
+    <div class="sidebar-item" data-section="testimonials">💬 Testimonials</div>
+    <div class="sidebar-item" data-section="services">🛎️ Services</div>
+    <div class="sidebar-item" data-section="pages">📄 Pages</div>
+    <div class="sidebar-item" data-section="security">🔒 Security</div>
+    <div class="sidebar-item" data-section="preview">👁️ Preview Site</div>
+  <div style="position:absolute;bottom:1rem;left:0;right:0;text-align:center;font-size:0.65rem;color:rgba(255,255,255,0.2);padding:0 1rem;">
+    DESIGNS &amp; COLLAB WITH<br/>
+    <a href="https://aadiilin.vercel.app" target="_blank" style="color:#c9a227;text-decoration:none">aadiilin.vercel.app</a>
+  </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main" id="mainContent">
+
+    <!-- ===== GALLERY & CATEGORIES ===== -->
+    <div class="section-panel active" id="panel-gallery">
+      <div class="card">
+        <div class="card-title" style="display:flex;justify-content:space-between;align-items:center;">
+          <span>Gallery Photos <span class="help" onclick="showHelp('gallery')">?</span></span>
+          <button class="btn-small btn-edit" onclick="openCategoryModal()">➕ New Category</button>
+        </div>
+        <!-- Categories -->
+        <div style="margin-bottom:1rem;">
+          <div class="cat-tabs" id="catTabs"></div>
+        </div>
+        <!-- Upload -->
+        <div class="dropzone" id="dropzone">
+          <div class="dropzone-icon">📸</div>
+          <div class="dropzone-text">Drag &amp; drop photos here or click to browse</div>
+          <div class="dropzone-sub">Accepts: JPG, PNG, WebP, GIF — Auto-compressed to ~200KB</div>
+          <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp,image/gif" multiple style="display:none" />
+        </div>
+        <div class="progress-bar" id="progressBar" style="display:none"><div class="progress-bar-fill" id="progressFill"></div></div>
+        <div class="photo-grid" id="galleryGrid"></div>
+      </div>
+    </div>
+
+    <!-- ===== HERO ===== -->
+    <div class="section-panel" id="panel-hero">
+      <div class="card">
+        <div class="card-title">
+          Hero Background Photo
+          <span class="help" onclick="showHelp('hero')">?</span>
+        </div>
+        <div class="hero-preview" id="heroPreview">
+          <span class="hero-preview-placeholder">No custom hero photo set. Default is used.</span>
+        </div>
+        <input type="file" id="heroInput" accept="image/jpeg,image/png,image/webp" style="display:none" />
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+          <button class="btn-gold" onclick="document.getElementById('heroInput').click()">Change Hero Photo</button>
+          <button class="btn-outline" onclick="resetHero()">Reset to Default</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== BUSINESS INFO ===== -->
+    <div class="section-panel" id="panel-info">
+      <div class="card">
+        <div class="card-title">
+          Business Information
+          <span class="help" onclick="showHelp('info')">?</span>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Business Name</label><input class="form-input" id="f_bizName" /></div>
+          <div class="form-group"><label class="form-label">Phone Number</label><input class="form-input" id="f_phone" /></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">WhatsApp Number</label><input class="form-input" id="f_whatsapp" /></div>
+          <div class="form-group"><label class="form-label">Email Address</label><input class="form-input" id="f_email" type="email" /></div>
+        </div>
+        <div class="form-group"><label class="form-label">Location / Address</label><input class="form-input" id="f_location" /></div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Instagram Handle</label><input class="form-input" id="f_instagram" /></div>
+          <div class="form-group"><label class="form-label">Tagline (English)</label><input class="form-input" id="f_tagline" /></div>
+        </div>
+        <div class="form-group"><label class="form-label">Tagline (Malayalam)</label><input class="form-input" id="f_taglineMl" /></div>
+        <div class="form-group"><label class="form-label">About Us</label><textarea class="form-textarea" id="f_about" rows="4"></textarea></div>
+        <button class="btn-gold" onclick="saveBusinessInfo()">Save Changes</button>
+      </div>
+    </div>
+
+    <!-- ===== TESTIMONIALS ===== -->
+    <div class="section-panel" id="panel-testimonials">
+      <div class="card">
+        <div class="card-title">
+          Testimonials
+          <span class="help" onclick="showHelp('testimonials')">?</span>
+        </div>
+        <div id="testimonialList"></div>
+        <button class="btn-gold" onclick="openTestimonialModal()" style="margin-top:.5rem;">+ Add New Testimonial</button>
+      </div>
+    </div>
+
+    <!-- ===== SERVICES ===== -->
+    <div class="section-panel" id="panel-services">
+      <div class="card">
+        <div class="card-title">
+          Services
+          <span class="help" onclick="showHelp('services')">?</span>
+        </div>
+        <div id="serviceList"></div>
+        <button class="btn-gold" onclick="openServiceModal()" style="margin-top:.5rem;">+ Add New Service</button>
+      </div>
+    </div>
+
+    <!-- ===== PAGES ===== -->
+    <div class="section-panel" id="panel-pages">
+      <div class="card">
+        <div class="card-title" style="display:flex;justify-content:space-between;align-items:center;">
+          <span>Website Pages <span class="help" onclick="showHelp('pages')">?</span></span>
+          <button class="btn-small btn-edit" onclick="openPageModal()">➕ New Page</button>
+        </div>
+        <p style="font-size:.8rem;color:#888;margin-bottom:1rem;">Custom pages appear as new sections on the main website and in the navigation.</p>
+        <div id="pagesList"></div>
+      </div>
+    </div>
+
+    <!-- ===== SECURITY ===== -->
+    <div class="section-panel" id="panel-security">
+      <div class="card">
+        <div class="card-title">Change Admin Password <span class="help" onclick="showHelp('security')">?</span></div>
+        <div class="form-group"><label class="form-label">Current Password</label><input class="form-input" id="sec_current" type="password" /></div>
+        <div class="form-group"><label class="form-label">New Password</label><input class="form-input" id="sec_new" type="password" /></div>
+        <div class="form-group"><label class="form-label">Confirm New Password</label><input class="form-input" id="sec_confirm" type="password" /></div>
+        <button class="btn-gold" onclick="changePassword()">Update Password</button>
+      </div>
+    </div>
+
+    <!-- ===== PREVIEW ===== -->
+    <div class="section-panel" id="panel-preview">
+      <div class="card">
+        <div class="card-title">Live Site Preview</div>
+        <p style="font-size:.82rem;color:#888;margin-bottom:1rem;">Open your live website to see all changes reflected instantly.</p>
+        <a href="/" target="_blank" class="btn-gold" style="display:inline-flex;padding:1rem 2rem;font-size:.9rem;">🌐 Open Live Website →</a>
+        <p style="font-size:.7rem;color:#666;margin-top:.8rem;">
+          <span style="color:#888;">Site URL:</span>
+          <a href="https://zakkevents.vercel.app" target="_blank" style="color:#c9a227;text-decoration:none;transition:opacity .2s;" onmouseover="this.style.opacity='.7'" onmouseout="this.style.opacity='1'">zakkevents.vercel.app</a>
+        </p>
+        <p style="font-size:.7rem;color:#666;margin-top:.6rem;" id="lastUpdated">Last updated: —</p>
+      </div>
+      <div class="stats-grid" id="statsGrid">
+        <div class="stat-card"><div class="stat-card-num" id="statPhotos">0</div><div class="stat-card-label">Total Photos</div></div>
+        <div class="stat-card"><div class="stat-card-num" id="statServices">0</div><div class="stat-card-label">Active Services</div></div>
+        <div class="stat-card"><div class="stat-card-num" id="statTestimonials">0</div><div class="stat-card-label">Testimonials</div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ===== LIGHTBOX ===== -->
+<div id="lightbox"></div>
+
+<!-- ===== TOAST CONTAINER ===== -->
+<div id="toastContainer"></div>
+
+<!-- ===== MODAL OVERLAY ===== -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" id="modalContent"></div>
+</div>
+
+<script src="db.js"></script>
+<script src="admin.js"></script>
+</body>
+</html>
