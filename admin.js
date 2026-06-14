@@ -19,6 +19,9 @@
   window.toast = toast;
 
   // ===== LOGIN =====
+  var savedPw = null;
+  DB.get('settings', 'adminPassword').then(function(s){ if(s && s.value) savedPw = s.value; });
+
   function checkSession(){
     if (sessionStorage.getItem(SESSION_KEY) === 'true') { showApp(); return true; }
     return false;
@@ -32,7 +35,8 @@
   document.getElementById('loginBtn').addEventListener('click', function(){
     var pw = document.getElementById('loginPassword').value;
     var err = document.getElementById('loginError');
-    if (pw === PASSWORD) {
+    var validPw = savedPw || PASSWORD;
+    if (pw === validPw) {
       sessionStorage.setItem(SESSION_KEY, 'true');
       showApp();
       document.getElementById('loginPassword').value = '';
@@ -383,6 +387,12 @@
   window.saveBusinessInfo = async function(){
     var fields = { business_name: 'f_bizName', phone: 'f_phone', whatsapp: 'f_whatsapp', email: 'f_email', location: 'f_location', instagram: 'f_instagram', tagline_en: 'f_tagline', tagline_ml: 'f_taglineMl', about_text: 'f_about' };
     for (var key in fields) await DB.saveSetting(key, document.getElementById(fields[key]).value.trim());
+    var phone = document.getElementById('f_phone').value.trim();
+    var wa = document.getElementById('f_whatsapp').value.trim();
+    var ig = document.getElementById('f_instagram').value.trim();
+    await DB.saveSetting('phone_url', phone ? 'tel:+91' + phone.replace(/[^0-9]/g, '') : '');
+    await DB.saveSetting('whatsapp_url', wa ? 'https://wa.me/' + wa.replace(/[^0-9]/g, '') : '');
+    await DB.saveSetting('instagram_url', ig ? 'https://www.instagram.com/' + ig.replace(/^@/, '') + '/' : '');
     toast('✅ Business info saved!', 'success');
   };
 
@@ -562,9 +572,11 @@
     var current = document.getElementById('sec_current').value;
     var newPw = document.getElementById('sec_new').value;
     var confirmPw = document.getElementById('sec_confirm').value;
-    if (current !== PASSWORD) { toast('❌ Current password is wrong.', 'error'); return; }
+    var validPw = savedPw || PASSWORD;
+    if (current !== validPw) { toast('❌ Current password is wrong.', 'error'); return; }
     if (newPw.length < 4) { toast('❌ New password must be at least 4 characters.', 'error'); return; }
     if (newPw !== confirmPw) { toast('❌ Passwords do not match.', 'error'); return; }
+    savedPw = newPw;
     PASSWORD = newPw;
     await DB.saveSetting('adminPassword', newPw);
     document.getElementById('sec_current').value = '';
