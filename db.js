@@ -1,7 +1,5 @@
 firebase.initializeApp(firebaseConfig);
 var firestore = firebase.firestore();
-var storage = firebase.storage();
-var storageRef = storage.ref();
 
 var DB = {};
 
@@ -43,7 +41,7 @@ DB.genId = function(){
   return firestore.collection('_').doc().id;
 };
 
-DB.uploadImage = function(file, maxKB){
+DB.compressImage = function(file, maxKB){
   return new Promise(function(resolve, reject){
     var img = new Image();
     img.onload = function(){
@@ -61,38 +59,15 @@ DB.uploadImage = function(file, maxKB){
         dataUrl = canvas.toDataURL('image/jpeg', quality);
         quality -= 0.08;
       } while (dataUrl.length > maxKB * 1024 * 1.37 && quality > 0.08);
-      var blob = dataURLToBlob(dataUrl);
-      var path = 'photos/' + DB.genId() + '.jpg';
-      storageRef.child(path).put(blob).then(function(snap){
-        return snap.ref.getDownloadURL();
-      }).then(function(url){
-        resolve(url);
-      }).catch(reject);
+      resolve(dataUrl);
     };
     img.onerror = reject;
     img.src = URL.createObjectURL(file);
   });
 };
 
-function dataURLToBlob(dataUrl){
-  var parts = dataUrl.split(',');
-  var mime = parts[0].match(/:(.*?);/)[1];
-  var bytes = atob(parts[1]);
-  var ab = new ArrayBuffer(bytes.length);
-  var ia = new Uint8Array(ab);
-  for (var i = 0; i < bytes.length; i++) ia[i] = bytes.charCodeAt(i);
-  return new Blob([ab], { type: mime });
-}
-
-DB.deleteImage = function(url){
-  try {
-    var ref = storage.refFromURL(url);
-    return ref.delete().catch(function(){});
-  } catch(e) { return Promise.resolve(); }
-};
-
 DB.onSnapshot = function(col, callback){
-  return firestore.collection(col).orderBy('order').onSnapshot(function(snap){
+  return firestore.collection(col).onSnapshot(function(snap){
     var arr = [];
     snap.forEach(function(d){ arr.push(d.data()); });
     callback(arr);
