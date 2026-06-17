@@ -270,6 +270,8 @@
 
   window.deletePhoto = async function(id){
     if (!confirm('Delete this photo?')) return;
+    var photo = _photos.find(function(p){ return p.id === id; });
+    if (photo && photo.url) DB.deleteImage(photo.url);
     await DB.del('photos', id);
     _photos = await DB.getAll('photos');
     renderGallery();
@@ -325,7 +327,7 @@
     for (var i = 0; i < total; i++) {
       fill.style.width = Math.round((i / total) * 100) + '%';
       try {
-        var dataUrl = await DB.compressImage(files[i], 200);
+        var dataUrl = await DB.uploadImage(files[i], 200);
         var photo = { id: DB.genId(), url: dataUrl, caption: files[i].name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' '), categoryId: _categories.length > 0 ? _categories[0].id : '', order: Date.now(), createdAt: new Date().toISOString() };
         await DB.put('photos', photo);
       } catch(e) { toast('❌ ' + files[i].name + ': ' + e.message, 'error'); }
@@ -353,7 +355,7 @@
   document.getElementById('heroInput').addEventListener('change', async function(){
     var file = this.files[0]; if (!file) return;
     try {
-      var url = await DB.compressImage(file, 300);
+      var url = await DB.uploadImage(file, 300);
       await DB.saveSetting('hero_url', url);
       loadHeroPreview();
       toast('✅ Hero photo updated!', 'success');
@@ -612,7 +614,7 @@
 
   // ===== HELP =====
   window.showHelp = function(section){
-    var texts = { gallery: 'Upload photos with captions, organize into categories. Photos are compressed and stored in IndexedDB.', hero: 'The gradient background of your site. Upload a photo to replace it.', info: 'Your business details — updates instantly on the main site.', testimonials: 'Customer reviews shown on your website.', services: 'Toggle on/off, edit, or add services.', pages: 'Create custom pages that appear in the navigation.', security: 'Change your admin password.' };
+    var texts = { gallery: 'Upload photos with captions, organize into categories. Photos are stored in Firebase Storage and data in Firestore.', hero: 'The gradient background of your site. Upload a photo to replace it.', info: 'Your business details — updates instantly on the main site.', testimonials: 'Customer reviews shown on your website.', services: 'Toggle on/off, edit, or add services.', pages: 'Create custom pages that appear in the navigation.', security: 'Change your admin password.' };
     toast('ℹ️ ' + (texts[section] || 'No help.'), 'info');
   };
 

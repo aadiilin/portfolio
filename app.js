@@ -13,28 +13,27 @@
   });
 
   async function initSite(){
-    try {
-      await DB.initDefaults();
-      categories = await DB.getAll('categories');
-      photos = await DB.getAll('photos');
-      settings = await DB.getSettings();
-      testimonials = await DB.getAll('testimonials');
-      services = await DB.getAll('services');
-      pages = await DB.getAll('pages');
-      loadingData = false;
-    } catch(e) { console.warn('DB load error:', e); loadingData = false; }
-
-    renderNav();
-    renderCategoryFilters();
-    renderGallery();
-    renderTestimonials();
-    renderServices();
-    applySettings();
-    renderPages();
-    buildFooter();
+    await DB.initDefaults();
+    loadOnce();
+    DB.onSnapshot('photos', function(arr){ photos = arr; renderGallery(); renderCategoryFilters(); });
+    DB.onSnapshot('categories', function(arr){ categories = arr; renderCategoryFilters(); renderGallery(); });
+    DB.onSnapshot('settings', function(){ DB.getSettings().then(function(s){ settings = s; applySettings(); }); });
+    DB.onSnapshot('testimonials', function(arr){ testimonials = arr; renderTestimonials(); });
+    DB.onSnapshot('services', function(arr){ services = arr; renderServices(); });
+    DB.onSnapshot('pages', function(arr){ pages = arr; renderNav(); renderPages(); });
   }
 
-  // Petals
+  function loadOnce(){
+    DB.getAll('categories').then(function(arr){ categories = arr; renderCategoryFilters(); });
+    DB.getAll('photos').then(function(arr){ photos = arr; renderGallery(); });
+    DB.getSettings().then(function(s){ settings = s; applySettings(); });
+    DB.getAll('testimonials').then(function(arr){ testimonials = arr; renderTestimonials(); });
+    DB.getAll('services').then(function(arr){ services = arr; renderServices(); });
+    DB.getAll('pages').then(function(arr){ pages = arr; renderNav(); renderPages(); });
+    buildFooter();
+    loadingData = false;
+  }
+
   var petalContainer = document.getElementById('petals');
   if(petalContainer){
     ['🌸','🌹','🌸','🌺','🌸','🌹'].forEach(function(c){
@@ -49,7 +48,6 @@
     });
   }
 
-  // Parallax
   var heroBg = document.getElementById('hero-bg');
   if(heroBg){
     window.addEventListener('scroll', function(){
@@ -57,13 +55,11 @@
     });
   }
 
-  // Sticky nav
   var navbar = document.getElementById('navbar');
   window.addEventListener('scroll', function(){
     navbar.classList.toggle('scrolled', window.scrollY > 60);
   });
 
-  // Mobile nav
   var hamburger = document.getElementById('hamburger');
   var navLinks = document.getElementById('navLinks');
   var overlay = document.getElementById('mobileOverlay');
@@ -87,7 +83,6 @@
   if(overlay) overlay.addEventListener('click', closeNav);
   document.querySelectorAll('.nav-links a').forEach(function(l){ l.addEventListener('click', closeNav); });
 
-  // Scroll reveal
   var revealEls = document.querySelectorAll('.reveal');
   if(revealEls.length){
     var observer = new IntersectionObserver(function(entries){
@@ -98,7 +93,6 @@
     revealEls.forEach(function(el){ observer.observe(el); });
   }
 
-  // Smooth scroll
   document.querySelectorAll('a[href^="#"]').forEach(function(a){
     a.addEventListener('click', function(e){
       var id = this.getAttribute('href');
@@ -112,7 +106,6 @@
     });
   });
 
-  // Counters
   var counters = document.querySelectorAll('.counter');
   if(counters.length){
     var co = new IntersectionObserver(function(entries){
@@ -134,18 +127,19 @@
     counters.forEach(function(el){ co.observe(el); });
   }
 
-  // Admin shortcut
   document.addEventListener('keydown', function(e){
     if(e.ctrlKey && e.shiftKey && (e.key === 'A' || e.key === 'a')) window.location.href = '/admin.html';
   });
 
-  // ===== DYNAMIC RENDERERS =====
   function renderNav(){
     var list = document.querySelector('.nav-links');
     if(!list) return;
+    var existing = list.querySelectorAll('.nav-custom-page');
+    existing.forEach(function(el){ el.remove(); });
     var custom = pages.filter(function(p){ return p.showInNav && p.slug !== 'hero' && p.slug !== 'booking' && p.slug !== 'gallery' && p.slug !== 'services' && p.slug !== 'about' && p.slug !== 'testimonials'; });
     custom.forEach(function(p){
       var li = document.createElement('li');
+      li.className = 'nav-custom-page';
       var a = document.createElement('a');
       a.href = '#page-' + p.slug;
       a.textContent = p.icon + ' ' + p.name;
@@ -156,7 +150,8 @@
 
   function renderCategoryFilters(){
     var container = document.getElementById('catFilters');
-    if(!container || categories.length === 0) return;
+    if(!container) return;
+    if(categories.length === 0){ container.innerHTML = ''; return; }
     var html = '<span class="cf-tab active" onclick="window._filterGallery(\'all\')">All</span>';
     categories.forEach(function(c){
       html += '<span class="cf-tab" onclick="window._filterGallery(\'' + c.id + '\')" style="--cat-color:' + c.color + '">' + c.emoji + ' ' + c.name + '</span>';
@@ -270,12 +265,10 @@
   }
 
   function applySettings(){
-    // Hero background
     if(settings.hero_url){
       var hb = document.getElementById('hero-bg');
       if(hb) hb.style.background = 'url("' + settings.hero_url + '") center center / cover fixed no-repeat';
     }
-    // Data-field binding
     Object.keys(settings).forEach(function(key){
       if(key === 'hero_url') return;
       var val = settings[key];
@@ -291,6 +284,7 @@
   function renderPages(){
     var container = document.getElementById('customPages');
     if(!container) return;
+    container.innerHTML = '';
     var custom = pages.filter(function(p){ return p.visible !== false && p.slug !== 'hero' && p.slug !== 'services' && p.slug !== 'gallery' && p.slug !== 'about' && p.slug !== 'testimonials' && p.slug !== 'booking'; });
     custom.forEach(function(p){
       var section = document.createElement('section');
@@ -301,7 +295,5 @@
     });
   }
 
-  function buildFooter(){
-    // Footer already has static structure; settings override text
-  }
+  function buildFooter(){}
 })();
