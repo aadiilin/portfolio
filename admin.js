@@ -1,6 +1,9 @@
 (function(){
   'use strict';
 
+  window.onerror = function(msg, src, line){ alert('⚠️ Error: ' + msg); };
+  window.addEventListener('unhandledrejection', function(e){ alert('⚠️ Error: ' + e.reason); });
+
   var PASSWORD = 'zakk2025';
   var SESSION_KEY = 'zakk_admin_session';
   var INACTIVITY_TIMEOUT = 30 * 60 * 1000;
@@ -20,7 +23,8 @@
 
   // ===== LOGIN =====
   var savedPw = null;
-  DB.get('settings', 'adminPassword').then(function(s){ if(s && s.value) savedPw = s.value; });
+  function dbReady(){ if (!DB._ready) { toast('⚠️ Database not ready: ' + (DB._error||'unknown'), 'error'); return false; } return true; }
+  if (dbReady()) DB.get('settings', 'adminPassword').then(function(s){ if(s && s.value) savedPw = s.value; });
 
   function checkSession(){
     if (sessionStorage.getItem(SESSION_KEY) === 'true') { showApp(); return true; }
@@ -144,7 +148,8 @@
   var _photos = [];
 
   async function initAdmin(){
-    await DB.initDefaults();
+    if (!dbReady()) return;
+    try { await DB.initDefaults(); } catch(e) { toast('⚠️ DB init: ' + e.message, 'error'); }
     await loadAll();
   }
 
@@ -314,31 +319,41 @@
   dz.addEventListener('dragover', function(e){ e.preventDefault(); this.classList.add('dragover'); });
   dz.addEventListener('dragleave', function(){ this.classList.remove('dragover'); });
   dz.addEventListener('drop', function(e){ e.preventDefault(); this.classList.remove('dragover'); handleFiles(e.dataTransfer.files); });
-  document.getElementById('fileInput').addEventListener('change', function(){ handleFiles(this.files); this.value = ''; });
+  document.getElementById('fileInput').addEventListener('change', function(){
+    if (typeof handleFiles !== 'function') { toast('❌ Upload not ready. Try refreshing.', 'error'); return; }
+    handleFiles(this.files).catch(function(e){ toast('❌ Upload error: ' + e.message, 'error'); });
+    this.value = '';
+  });
 
   async function handleFiles(files){
-    if (!files.length) return;
-    var bar = document.getElementById('progressBar');
-    var fill = document.getElementById('progressFill');
-    bar.style.display = 'block';
-    var total = files.length;
-    for (var i = 0; i < total; i++) {
-      fill.style.width = Math.round((i / total) * 100) + '%';
-      try {
-        var dataUrl = await DB.compressImage(files[i], 200);
-        var photo = { id: DB.genId(), url: dataUrl, caption: files[i].name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' '), categoryId: _categories.length > 0 ? _categories[0].id : '', order: Date.now(), createdAt: new Date().toISOString() };
-        await DB.put('photos', photo);
-      } catch(e) { toast('❌ ' + files[i].name + ': ' + e.message, 'error'); }
-    }
-    fill.style.width = '100%';
-    _photos = await DB.getAll('photos');
-    renderGallery();
-    renderCategoryTabs();
-    updateStats();
-    setTimeout(function(){
-      bar.style.display = 'none';
-      toast('✅ ' + total + ' photos uploaded with compression!', 'success');
-    }, 300);
+    try {
+      if (!files.length) return;
+      var bar = document.getElementById('progressBar');
+      var fill = document.getElementById('progressFill');
+      if (!bar || !fill) { toast('❌ Upload UI not found.', 'error'); return; }
+      bar.style.display = 'block';
+      var total = files.length;
+      for (var i = 0; i < total; i++) {
+        fill.style.width = Math.round((i / total) * 100) + '%';
+        try {
+          if (typeof DB.compressImage !== 'function' || typeof DB.genId !== 'function' || typeof DB.put !== 'function') {
+            toast('❌ Database not ready. Refresh page.', 'error'); return;
+          }
+          var url = await DB.compressImage(files[i], 200);
+          var photo = { id: DB.genId(), url: url, caption: files[i].name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' '), categoryId: _categories.length > 0 ? _categories[0].id : '', order: Date.now(), createdAt: new Date().toISOString() };
+          await DB.put('photos', photo);
+        } catch(e) { toast('❌ ' + files[i].name + ': ' + e.message, 'error'); }
+      }
+      fill.style.width = '100%';
+      _photos = await DB.getAll('photos');
+      renderGallery();
+      renderCategoryTabs();
+      updateStats();
+      setTimeout(function(){
+        bar.style.display = 'none';
+        toast('✅ ' + total + ' photos uploaded!', 'success');
+      }, 300);
+    } catch(e) { toast('❌ Upload failed: ' + e.message, 'error'); }
   }
 
   // ===== HERO =====
