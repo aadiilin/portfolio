@@ -5,29 +5,31 @@ try {
   if (typeof firebaseConfig === 'undefined') throw new Error('Firebase config not found');
 
   firebase.initializeApp(firebaseConfig);
-  var firestore = firebase.firestore();
+  var rtdb = firebase.database();
   DB._ready = true;
 
+  function ref(path){ return rtdb.ref(path); }
+
   DB.getAll = function(col){
-    return firestore.collection(col).get().then(function(snap){
-      var arr = [];
-      snap.forEach(function(d){ arr.push(d.data()); });
-      return arr;
+    return ref(col).once('value').then(function(snap){
+      var data = snap.val();
+      if (!data) return [];
+      return Object.keys(data).map(function(k){ return data[k]; });
     });
   };
 
   DB.get = function(col, id){
-    return firestore.collection(col).doc(id).get().then(function(d){
-      return d.exists ? d.data() : null;
+    return ref(col + '/' + id).once('value').then(function(snap){
+      return snap.val();
     });
   };
 
   DB.put = function(col, item){
-    return firestore.collection(col).doc(item.id).set(item, { merge: true });
+    return ref(col + '/' + item.id).set(item);
   };
 
   DB.del = function(col, id){
-    return firestore.collection(col).doc(id).delete();
+    return ref(col + '/' + id).remove();
   };
 
   DB.getSettings = function(){
@@ -43,7 +45,7 @@ try {
   };
 
   DB.genId = function(){
-    return firestore.collection('_').doc().id;
+    return ref('_').push().key;
   };
 
   DB.compressImage = function(file, maxKB){
@@ -72,9 +74,12 @@ try {
   };
 
   DB.onSnapshot = function(col, callback){
-    return firestore.collection(col).onSnapshot(function(snap){
+    return ref(col).on('value', function(snap){
+      var data = snap.val();
       var arr = [];
-      snap.forEach(function(d){ arr.push(d.data()); });
+      if (data) {
+        arr = Object.keys(data).map(function(k){ return data[k]; });
+      }
       callback(arr);
     });
   };
