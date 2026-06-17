@@ -627,7 +627,7 @@
 
   // ===== HELP =====
   window.showHelp = function(section){
-    var texts = { gallery: 'Upload photos with captions, organize into categories. Photos stored in Firestore (compressed base64).', hero: 'The gradient background of your site. Upload a photo to replace it.', info: 'Your business details — updates instantly on the main site.', testimonials: 'Customer reviews shown on your website.', services: 'Toggle on/off, edit, or add services.', pages: 'Create custom pages that appear in the navigation.', security: 'Change your admin password.' };
+    var texts = { gallery: 'Upload photos with captions, organize into categories. Photos stored in Realtime Database (compressed base64).', hero: 'The gradient background of your site. Upload a photo to replace it.', info: 'Your business details — updates instantly on the main site.', testimonials: 'Customer reviews shown on your website.', services: 'Toggle on/off, edit, or add services.', pages: 'Create custom pages that appear in the navigation.', security: 'Change your admin password.' };
     toast('ℹ️ ' + (texts[section] || 'No help.'), 'info');
   };
 

@@ -1,88 +1,100 @@
-var DB = { _ready: false };
+var DB = { _ready: false, _lastError: null };
 
-try {
-  if (typeof firebase === 'undefined') throw new Error('Firebase SDK not loaded');
-  if (typeof firebaseConfig === 'undefined') throw new Error('Firebase config not found');
+(function(){
+  try {
+    if (typeof firebase === 'undefined') throw new Error('Firebase SDK not loaded');
+    if (typeof firebaseConfig === 'undefined') throw new Error('Firebase config not found');
 
-  firebase.initializeApp(firebaseConfig);
-  var rtdb = firebase.database();
-  DB._ready = true;
+    firebase.initializeApp(firebaseConfig);
+    var rtdb = firebase.database();
+    DB._ready = true;
 
-  function ref(path){ return rtdb.ref(path); }
+    function ref(path){ return path ? rtdb.ref(path) : rtdb.ref(); }
 
-  DB.getAll = function(col){
-    return ref(col).once('value').then(function(snap){
-      var data = snap.val();
-      if (!data) return [];
-      return Object.keys(data).map(function(k){ return data[k]; });
-    });
-  };
+    function wrap(p, label){
+      return p.catch(function(err){
+        DB._lastError = (label ? label + ': ' : '') + err.message;
+        console.error('DB error:', DB._lastError);
+        throw err;
+      });
+    }
 
-  DB.get = function(col, id){
-    return ref(col + '/' + id).once('value').then(function(snap){
-      return snap.val();
-    });
-  };
+    DB.getAll = function(col){
+      return wrap(ref(col).once('value').then(function(snap){
+        var data = snap.val();
+        if (!data) return [];
+        return Object.keys(data).map(function(k){ return data[k]; });
+      }), 'getAll(' + col + ')');
+    };
 
-  DB.put = function(col, item){
-    return ref(col + '/' + item.id).set(item);
-  };
+    DB.get = function(col, id){
+      return wrap(ref(col + '/' + id).once('value').then(function(snap){
+        return snap.val();
+      }), 'get(' + col + ')');
+    };
 
-  DB.del = function(col, id){
-    return ref(col + '/' + id).remove();
-  };
+    DB.put = function(col, item){
+      return wrap(ref(col + '/' + item.id).set(item), 'put(' + col + ')');
+    };
 
-  DB.getSettings = function(){
-    return DB.getAll('settings').then(function(items){
-      var o = {};
-      items.forEach(function(i){ o[i.key] = i.value; });
-      return o;
-    });
-  };
+    DB.del = function(col, id){
+      return wrap(ref(col + '/' + id).remove(), 'del(' + col + ')');
+    };
 
-  DB.saveSetting = function(key, value){
-    return DB.put('settings', { id: key, key: key, value: value });
-  };
+    DB.getSettings = function(){
+      return DB.getAll('settings').then(function(items){
+        var o = {};
+        items.forEach(function(i){ o[i.key] = i.value; });
+        return o;
+      });
+    };
 
-  DB.genId = function(){
-    return ref('_').push().key;
-  };
+    DB.saveSetting = function(key, value){
+      return DB.put('settings', { id: key, key: key, value: value });
+    };
 
-  DB.compressImage = function(file, maxKB){
-    return new Promise(function(resolve, reject){
-      var img = new Image();
-      img.onload = function(){
-        var canvas = document.createElement('canvas');
-        var w = img.width, h = img.height, maxDim = 1200;
-        if (w > maxDim || h > maxDim) {
-          if (w > h) { h = Math.round(h * maxDim / w); w = maxDim; }
-          else { w = Math.round(w * maxDim / h); h = maxDim; }
+    DB.genId = function(){
+      return ref().push().key;
+    };
+
+    DB.compressImage = function(file, maxKB){
+      return new Promise(function(resolve, reject){
+        var img = new Image();
+        img.onload = function(){
+          var canvas = document.createElement('canvas');
+          var w = img.width, h = img.height, maxDim = 1200;
+          if (w > maxDim || h > maxDim) {
+            if (w > h) { h = Math.round(h * maxDim / w); w = maxDim; }
+            else { w = Math.round(w * maxDim / h); h = maxDim; }
+          }
+          canvas.width = w; canvas.height = h;
+          var ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, h);
+          var quality = 0.85, dataUrl;
+          do {
+            dataUrl = canvas.toDataURL('image/jpeg', quality);
+            quality -= 0.08;
+          } while (dataUrl.length > maxKB * 1024 * 1.37 && quality > 0.08);
+          resolve(dataUrl);
+        };
+        img.onerror = reject;
+        img.src = URL.createObjectURL(file);
+      });
+    };
+
+    DB.onSnapshot = function(col, callback){
+      return ref(col).on('value', function(snap){
+        var data = snap.val();
+        var arr = [];
+        if (data) {
+          arr = Object.keys(data).map(function(k){ return data[k]; });
         }
-        canvas.width = w; canvas.height = h;
-        var ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, w, h);
-        var quality = 0.85, dataUrl;
-        do {
-          dataUrl = canvas.toDataURL('image/jpeg', quality);
-          quality -= 0.08;
-        } while (dataUrl.length > maxKB * 1024 * 1.37 && quality > 0.08);
-        resolve(dataUrl);
-      };
-      img.onerror = reject;
-      img.src = URL.createObjectURL(file);
-    });
-  };
-
-  DB.onSnapshot = function(col, callback){
-    return ref(col).on('value', function(snap){
-      var data = snap.val();
-      var arr = [];
-      if (data) {
-        arr = Object.keys(data).map(function(k){ return data[k]; });
-      }
-      callback(arr);
-    });
-  };
+        callback(arr);
+      }, function(err){
+        DB._lastError = 'onSnapshot(' + col + '): ' + err.message;
+        console.error('DB error:', DB._lastError);
+      });
+    };
 
   DB.DEFAULT_CATEGORIES = [
     { id: 'cat_weddings', emoji: '💍', name: 'Weddings', color: '#c9a227', order: 0 },
@@ -119,6 +131,8 @@ try {
   };
 
 } catch(e) {
-  console.error('DB init error:', e);
-  DB._error = e.message;
-}
+    console.error('DB init error:', e);
+    DB._error = e.message;
+    DB._lastError = e.message;
+  }
+})();
